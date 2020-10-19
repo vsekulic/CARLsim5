@@ -143,7 +143,7 @@ classdef NeuronReader < handle
             % The total simulation duration is usually stored in a
             % "sim_{simName}.dat" file and can be retrieved by using a
             fseek(obj.fileId, -20, 'eof'); % jump to penultimate int
-            simDurMs = fread(obj.fileId, 1, 'int32');
+            simDurMs = fread(obj.fileId, 1, 'int32') + 1;	% add 1 because first record is t=0.
         end
         
         function nValues = readValues(obj, binWindowMs)
@@ -183,7 +183,12 @@ classdef NeuronReader < handle
                 % D is a 2xNRREAD matrix.  Row 1 contains the times that
                 % the neuron spiked. Row 2 contains the neuron id that
                 % spiked at this corresponding time.
-                d = fread(obj.fileId, [2 nrRead], 'int32');
+%                d = fread(obj.fileId, [5 nrRead], 'int32');
+				while ~feof(obj.fileId)
+					d1 = fread(obj.fileId, 2, 'int32');
+					d2 = fread(obj.fileId, 3, 'float');
+					d = [d [d1; d2]];
+				end
 
                 if ~isempty(d)
                     if obj.binWindow<0
@@ -225,13 +230,25 @@ classdef NeuronReader < handle
                 nValues(max(1,end),prod(obj.grid3D))=0;
             end
             
+            % extract stimulus length
+            obj.stimLengthMs = obj.getSimDurMs();
+
+			% split data into pages for neurons
+			sim_length = size(nValues,2);
+			num_neurons = sim_length / obj.stimLengthMs;
+			nnValues = [];	% nValues split per neuron
+			for i=1:num_neurons
+				%disp(sprintf('at neuron %d\n',i));
+				bar = (i:num_neurons:size(nValues,2));
+				foo = nValues(:,(i:num_neurons:size(nValues,2)));
+				nnValues(:,:,i) = nValues(:,i:num_neurons:size(nValues,2));
+			end
+			nValues = nnValues;
+
             % store spike data
             if obj.storeValues
                 obj.nData = nValues;
             end
-            
-            % extract stimulus length
-            obj.stimLengthMs = obj.getSimDurMs();
         end
     end
     

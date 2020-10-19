@@ -910,7 +910,7 @@ classdef NeuronMonitor < handle
             % re-format the spike data
             if strcmpi(obj.plotType,'flowfield')
                 % flowfield uses 3D spike buffer to calc flow field
-                spkBuffer = obj.nObj.readSpikes(plotBinWinMs);
+                spkBuffer = obj.nObj.readValues(plotBinWinMs);
                 
                 % reshape according to group dimensions
                 numFrames = size(spkBuffer,1);
@@ -949,7 +949,7 @@ classdef NeuronMonitor < handle
             elseif strcmpi(obj.plotType,'heatmap')
                 % heat map uses user-set frameDur for both binning and
                 % plotting
-                spkBuffer = obj.nObj.readSpikes(plotBinWinMs);
+                spkBuffer = obj.nObj.readValues(plotBinWinMs);
                 
                 % reshape according to group dimensions
                 numFrames = size(spkBuffer,1);
@@ -964,7 +964,7 @@ classdef NeuronMonitor < handle
             elseif strcmpi(obj.plotType,'histogram')
                 % hist uses smaller bin size than frameDur
                 histBinMs = plotBinWinMs/obj.plotHistNumBins;
-                spkBuffer = sum(obj.nObj.readSpikes(histBinMs),2)';
+                spkBuffer = sum(obj.nObj.readValues(histBinMs),2)';
                 
                 if obj.plotHistShowRate
                     % compute firing rate (Hz) from number of spikes
@@ -973,7 +973,7 @@ classdef NeuronMonitor < handle
             elseif strcmpi(obj.plotType,'raster')
                 % raster uses user-set frameDur just for plotting
                 % binning is not required, use AER instead
-                spkBuffer = obj.nObj.readSpikes(-1);
+                spkBuffer = obj.nObj.readValues(-1);
             else
                 obj.throwError(['Unrecognized plot type "' obj.plotType '".'])
                 return
